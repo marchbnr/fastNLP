@@ -17,7 +17,7 @@ g_model_select = {
     'nli': STNLICls,
 }
 
-g_emb_file_path = {'en': '/remote-home/yfshao/workdir/datasets/word_vector/glove.840B.300d.txt',
+g_emb_file_path = {'en': '/raid/resources/glove/glove.840B.300d.txt',
                    'zh': '/remote-home/yfshao/workdir/datasets/word_vector/cc.zh.300.vec'}
 
 g_args = None
@@ -59,7 +59,7 @@ def get_sst():
 
 
 def get_snli():
-    path = '/remote-home/yfshao/workdir/datasets/nli-data/snli_1.0'
+    path = '/raid/corpora/snli_1.0'
     files = ['snli_1.0_train.jsonl',
              'snli_1.0_dev.jsonl', 'snli_1.0_test.jsonl']
     return load_snli(path, files)

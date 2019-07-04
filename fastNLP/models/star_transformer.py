@@ -12,6 +12,7 @@ import torch
 from torch import nn
 
 from ..modules.encoder.star_transformer import StarTransformer
+from ..modules.encoder.transformer import TransformerEncoder
 from ..core.utils import seq_len_to_mask
 from ..modules.utils import get_embeddings
 from ..core.const import Const
@@ -48,12 +49,14 @@ class StarTransEnc(nn.Module):
         emb_dim = self.embedding.embedding_dim
         self.emb_fc = nn.Linear(emb_dim, hidden_size)
         self.emb_drop = nn.Dropout(emb_dropout)
-        self.encoder = StarTransformer(hidden_size=hidden_size,
-                                       num_layers=num_layers,
-                                       num_head=num_head,
-                                       head_dim=head_dim,
-                                       dropout=dropout,
-                                       max_len=max_len)
+        self.encoder = TransformerEncoder(
+                inner_size=hidden_size*2,
+                num_layers=num_layers,
+                model_size=hidden_size,
+                num_head=num_head,
+                key_size=head_dim,
+                value_size=head_dim,
+                dropout=dropout)
     
     def forward(self, x, mask):
         """
@@ -66,8 +69,8 @@ class StarTransEnc(nn.Module):
         """
         x = self.embedding(x)
         x = self.emb_fc(self.emb_drop(x))
-        nodes, relay = self.encoder(x, mask)
-        return nodes, relay
+        nodes = self.encoder(x, mask.float())
+        return nodes
 
 
 class _Cls(nn.Module):
@@ -285,8 +288,8 @@ class STNLICls(nn.Module):
         mask2 = seq_len_to_mask(seq_len2)
         
         def enc(seq, mask):
-            nodes, relay = self.enc(seq, mask)
-            return 0.5 * (relay + nodes.max(1)[0])
+            nodes = self.enc(seq, mask)
+            return nodes.max(1)[0]
         
         y1 = enc(words1, mask1)
         y2 = enc(words2, mask2)
